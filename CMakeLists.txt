@@ -7,7 +7,8 @@ set(CMAKE_CXX_STANDARD 20)
 find_package(SFML COMPONENTS Network Graphics Window Audio System CONFIG REQUIRED)
 
 add_executable(Konan main.cpp
-        Types.hpp)
+        Types.hpp
+        simulation/ECS.hpp)
 
 target_link_libraries(Konan PRIVATE SFML::Network SFML::Graphics SFML::Window SFML::Audio SFML::System)
 

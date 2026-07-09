@@ -1,3 +1,5 @@
+// IDs, Enums, Grid Positions
+
 #pragma once // include guard makes sure file is included only once during single compilation
 #include <cstdint> // integer types
 #include <functional> // handling callable objects
