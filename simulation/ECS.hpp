@@ -34,7 +34,7 @@ namespace nexus::ecs {
                     sparse_.resize(e+1, UINT32_MAX);
                 }
                 assert(sparse_[e] == UINT32_MAX && "Duplicate Component");
-                sparse_[e] = static_cast<uint32_t>(dense_entities_.size());
+                sparse_[e] = static_cast<uint32_t>(dense_entities_.size()); //convert between data types
                 dense_entities_.push_back(e);
                 dense_data_.push_back(std::move(component));
             }
@@ -150,7 +150,7 @@ namespace nexus::ecs {
             // component add / get/ remove/ has
             template<typename T>
             T& addComponent(EntityID e, T comp) {
-                auto cid = ComponentRegistry::id<T>();
+                auto cid = ComponentRegistry::id<T>(); // auto means compiler automatically deduce data type
                 auto& pool = getOrCreatePool<T>(cid);
                 pool.set.insert(e, std::move(comp));
                 signatures_[e].set(cid);

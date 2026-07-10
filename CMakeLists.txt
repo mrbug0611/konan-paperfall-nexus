@@ -8,7 +8,8 @@ find_package(SFML COMPONENTS Network Graphics Window Audio System CONFIG REQUIRE
 
 add_executable(Konan main.cpp
         Types.hpp
-        simulation/ECS.hpp)
+        simulation/ECS.hpp
+        simulation/Components.hpp)
 
 target_link_libraries(Konan PRIVATE SFML::Network SFML::Graphics SFML::Window SFML::Audio SFML::System)
 
