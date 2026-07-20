@@ -12,14 +12,14 @@ namespace nexus::ecs {
     class ComponentRegistry {
     public:
         template<typename T> // can adapt to variety of types
-        static ComponentT id() {
+        static auto id() -> ComponentT {
             static ComponentT cid = nextID();
             assert(cid < MAX_COMPONENTS && "Component Limit Exceeded");
             return cid;
 
         }
     private:
-        static ComponentT nextID() {
+        static auto nextID() -> ComponentT {
             static ComponentT counter = 0;
             return counter++;
         }
@@ -55,29 +55,29 @@ namespace nexus::ecs {
 
             }
 
-            [[nodiscard]] bool has(const EntityID e) const noexcept {
+            [[nodiscard]] auto has(const EntityID e) const noexcept -> bool {
                     return e < sparse_.size() && sparse_[e] != UINT32_MAX;
                 }
 
-            T& get(const EntityID e) {
+            auto get(const EntityID e) -> T& {
                 assert(has(e));
                 return dense_data_[sparse_[e]];
             }
 
-            const T& get(const EntityID e) const {
+            auto get(const EntityID e) const -> const T& {
                     assert(has(e));
                     return dense_data_[sparse_[e]];
                 }
 
-            std::vector<EntityID>& entities() noexcept {
+            auto entities() noexcept -> std::vector<EntityID>& {
                 return dense_entities_;
             }
 
-            [[nodiscard]] const std::vector<EntityID>& entities() const noexcept {
+            [[nodiscard]] auto entities() const noexcept -> const std::vector<EntityID>& {
                 return dense_entities_;
             }
 
-            [[nodiscard]] size_t size() const noexcept {
+            [[nodiscard]] auto size() const noexcept -> size_t {
                 return dense_entities_.size();
             }
 
@@ -92,7 +92,7 @@ namespace nexus::ecs {
     struct IPool {
         virtual ~IPool() = default;
         virtual void remove(EntityID e) = 0;
-        [[nodiscard]] virtual bool has() const = 0;
+        [[nodiscard]] virtual auto has() const -> bool = 0;
     };
 
     template<typename T>
@@ -102,7 +102,7 @@ namespace nexus::ecs {
             set.remove(e);
         }
 
-        [[nodiscard]] bool has() const override {
+        [[nodiscard]] auto has() const -> bool override {
             return set.has();
         }
     };
@@ -111,7 +111,7 @@ namespace nexus::ecs {
     class World {
         public:
             // Entity Lifecycle
-            EntityID createEntity() {
+            auto createEntity() -> EntityID {
                 EntityID id;
 
                 if (!free_.empty()) {
@@ -142,14 +142,14 @@ namespace nexus::ecs {
                 free_.push_back(e);
             }
 
-            bool isAlive(const EntityID e) const noexcept {
+            auto isAlive(const EntityID e) const noexcept -> bool {
                 return e < signatures_.size() &&
                     std::ranges::find(alive_, e) != alive_.end();
             }
 
             // component add / get/ remove/ has
             template<typename T>
-            T& addComponent(EntityID e, T comp) {
+            auto addComponent(EntityID e, T comp) -> T& {
                 auto cid = ComponentRegistry::id<T>(); // auto means compiler automatically deduce data type
                 auto& pool = getOrCreatePool<T>(cid);
                 pool.set.insert(e, std::move(comp));
@@ -158,12 +158,12 @@ namespace nexus::ecs {
             }
 
             template<typename T>
-            T& getComponent(EntityID e) {
+            auto getComponent(EntityID e) -> T& {
                 return getPool<T>().set.get(e);
             }
 
             template<typename T>
-            bool hasComponent(EntityID e) const noexcept {
+            auto hasComponent(EntityID e) const noexcept -> bool {
                 auto cid = ComponentRegistry::id<T>();
                 return cid < pools_.size() && pools_.count(cid) && pools_.at(cid)->has(e);
             }
@@ -179,7 +179,7 @@ namespace nexus::ecs {
 
             // view: Iterate over entities with all listed components
             template<typename... Ts> // accept 0, 1 or many datatypes
-            std::vector<EntityID> view() const {
+            auto view() const -> std::vector<EntityID> {
                 std::vector<EntityID> result;
 
                 if (alive_.empty()) {
@@ -196,17 +196,17 @@ namespace nexus::ecs {
                 return result;
             }
 
-            const std::vector<EntityID>& allEntries() const noexcept {
+            auto allEntries() const noexcept -> const std::vector<EntityID>& {
                 return alive_;
             }
 
-            size_t entityCount() const noexcept {
+            auto entityCount() const noexcept -> size_t {
                 return alive_.size();
             }
         private:
 
             template<typename T>
-            Pool<T> getOrCreatePool(const ComponentT cid) {
+            auto getOrCreatePool(const ComponentT cid) -> Pool<T> {
                 if (!pools_.contains(cid)) {
                     pools_[cid] = std::make_unique<Pool<T>>();
                 }
@@ -215,7 +215,7 @@ namespace nexus::ecs {
             }
 
             template<typename T>
-            Pool<T>& getPool() {
+            auto getPool() -> Pool<T>& {
                 auto cid = ComponentRegistry::id<T>();
                 auto it = pools_.find(cid);
 
@@ -227,10 +227,11 @@ namespace nexus::ecs {
             }
 
             template<typename T>
-            const Pool<T>& getPool() const {
+            auto getPool() const -> const Pool<T>& {
                 auto cid = ComponentRegistry::id<T>();
                 auto it = pools_.find(cid);
-                if (it == pools_.end()) throw std::runtime_error("Component pool not found");
+                if (it == pools_.end()) { throw std::runtime_error("Component pool not found");
+}
                 return *static_cast<const Pool<T>*>(it->second.get());
             }
             std::vector<EntityID> free_;

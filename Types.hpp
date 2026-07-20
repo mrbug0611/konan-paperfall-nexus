@@ -21,38 +21,38 @@ namespace nexus {
     // ─── Grid coordinate ───────────────────────────────────────────────────────
     struct GridPos {
         int x{0}, y{0}; // 0 by default
-        bool operator==(const GridPos& o) const noexcept { // noexcept means never throw exceptions
+        auto operator==(const GridPos& o) const noexcept -> bool { // noexcept means never throw exceptions
             return x == o.x && y == o.y;
         }
 
-        bool operator!=(const GridPos& o) const noexcept {
+        auto operator!=(const GridPos& o) const noexcept -> bool {
             return !(*this == o);
         }
 
-        GridPos operator+(const GridPos& o) const noexcept {
+        auto operator+(const GridPos& o) const noexcept -> GridPos {
             return {x + o.x, y + o.y};
         }
 
-        GridPos operator-(const GridPos& o) const noexcept {
+        auto operator-(const GridPos& o) const noexcept -> GridPos {
             return {x - o.x, y - o.y};
         }
     };
 
     struct GridPosHash {
-        std::size_t operator()(const GridPos& p) const noexcept {
+        auto operator()(const GridPos& p) const noexcept -> std::size_t {
             return std::hash<int>{}(p.x) ^ (std::hash<int>{}(p.y) << 16); //
         }
     };
 
     // ─── Directions ────────────────────────────────────────────────────────────
-    constexpr GridPos DIR_N  { 0,-1};
-    constexpr GridPos DIR_S  { 0, 1};
-    constexpr GridPos DIR_E  { 1, 0};
-    constexpr GridPos DIR_W  {-1, 0};
-    constexpr GridPos DIR_NE { 1,-1};
-    constexpr GridPos DIR_NW {-1,-1};
-    constexpr GridPos DIR_SE { 1, 1};
-    constexpr GridPos DIR_SW {-1, 1};
+    constexpr GridPos DIR_N  { .x=0,.y=-1};
+    constexpr GridPos DIR_S  { .x=0, .y=1};
+    constexpr GridPos DIR_E  { .x=1, .y=0};
+    constexpr GridPos DIR_W  {.x=-1, .y=0};
+    constexpr GridPos DIR_NE { .x=1,.y=-1};
+    constexpr GridPos DIR_NW {.x=-1,.y=-1};
+    constexpr GridPos DIR_SE { .x=1, .y=1};
+    constexpr GridPos DIR_SW {.x=-1, .y=1};
     constexpr GridPos DIRS_4[4]  = {DIR_N, DIR_S, DIR_E, DIR_W};
     constexpr GridPos DIRS_8[8]  = {DIR_N,DIR_S,DIR_E,DIR_W,DIR_NE,DIR_NW,DIR_SE,DIR_SW};
 
@@ -60,7 +60,7 @@ namespace nexus {
     enum class Faction : uint8_t {
         Player = 0,
         Enemy = 1,
-        Neutral = 2
+        Neutral = 2,
     };
 
     // ─── Paper construct types ─────────────────────────────────────────────────
@@ -70,7 +70,7 @@ namespace nexus {
         CloneSlip = 2, //Decoy
         ExplosiveTag = 3, //Chain Bomb
         Bridge = 4, // Traversal Modifier
-        Ramp = 5
+        Ramp = 5,
     };
 
     // ─── Tile base types ───────────────────────────────────────────────────────
@@ -81,7 +81,7 @@ namespace nexus {
         Void        = 3,
         PaperWall   = 4,
         PaperBridge = 5,
-        BurnedAsh   = 6
+        BurnedAsh   = 6,
     };
 
     // ─── Game phase ────────────────────────────────────────────────────────────
@@ -90,7 +90,7 @@ namespace nexus {
         Playing,
         Paused,
         GameOver,
-        ReplayView
+        ReplayView,
     };
 
-};
+} // namespace nexus

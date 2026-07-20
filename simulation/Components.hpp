@@ -10,8 +10,8 @@ namespace nexus::components {
     struct Position {
         GridPos grid;
         sf::Vector2f world; // pixel position for smooth movement
-        float subX{0.f};
-        float subY{0.f}; // lerp (linear interpolation) progress 0-1 (default value 0.0) f tells you it's a float
+        float subX{0.F};
+        float subY{0.F}; // lerp (linear interpolation) progress 0-1 (default value 0.0) f tells you it's a float
 
     };
 
@@ -20,11 +20,11 @@ namespace nexus::components {
         int current{100};
         int max{100};
 
-        [[nodiscard]] bool isAlive() const noexcept {
+        [[nodiscard]] auto isAlive() const noexcept -> bool {
             return current > 0;
         }
 
-        [[nodiscard]] float fraction() const noexcept {
+        [[nodiscard]] auto fraction() const noexcept -> float {
             return static_cast<float>(current) / static_cast<float>(max);
         }
 
@@ -43,7 +43,7 @@ namespace nexus::components {
         float speed{2.f}; // tiles per second
         std::vector<GridPos> path;
         size_t pathIndex{0};
-        float moveProgress{0.f};
+        float moveProgress{0.F};
         bool moving{false};
     };
 
@@ -99,10 +99,10 @@ namespace nexus::components {
 
     // ─── Scout behavior ───────────────────────────────────────────────────────
     struct Scout {
-        float revealRate{1.f}; //tiles/second
+        float revealRate{1.F}; //tiles/second
         bool returnsToBase{false};
         GridPos homeBase{0,0};
-        float lifeTime{60.f};
+        float lifeTime{60.F};
 
     };
 
@@ -127,33 +127,33 @@ namespace nexus::components {
         bool ignoreDecoys{false};
         bool focusScouts{false};
 
-        float alertCooldown{0.f};
-        float lastSeenPlayerTime{-999.f};
-        GridPos lastKnownPlayerPos{-1, -1};
+        float alertCooldown{0.F};
+        float lastSeenPlayerTime{-999.F};
+        GridPos lastKnownPlayerPos{.x=-1, .y=-1};
     };
 
     // ─── Status effects ───────────────────────────────────────────────────────
     struct StatusEffects {
         bool burning{false};
-        float burnDuration{0.f};
+        float burnDuration{0.F};
         int burnDamagePerSec{5};
 
         bool stunned{false};
-        float stunDuration{0.f};
+        float stunDuration{0.F};
 
         bool concealed{false}; // behind barrier cover
-        float concealment {0.f}; // 0-1
+        float concealment {0.F}; // 0-1
     };
 
     // ─── Terrain modifier (attached to tile entity) ───────────────────────────
     struct TerrainMod {
         TerrainType original{TerrainType::Open};
         TerrainType current{TerrainType::Open};
-        float traversalCost{1.f};
+        float traversalCost{1.F};
         bool blocksMovement{false};
         bool blocksVision{false};
         bool onFire{false};
-        float fireDuration{0.f};
+        float fireDuration{0.F};
     };
 
     // ─── Tag: player-controlled ───────────────────────────────────────────────
@@ -163,8 +163,8 @@ namespace nexus::components {
     struct Commander {
         int paperCharges{10};
         int maxPaperCharges{10};
-        float chargeRegenRate{0.5f};
-        float chargeRegenAccum{0.f};
+        float chargeRegenRate{0.5F};
+        float chargeRegenAccum{0.F};
         PaperType selectedType{PaperType::Crane};
     };
 
