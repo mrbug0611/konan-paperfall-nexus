@@ -6,12 +6,12 @@
 namespace nexus::map {
     // ─── Tile ─────────────────────────────────────────────────────────────────
     struct Tile {
-        TerrainType terrain{TerrainType::Open};
-        float traversalCost{1.0f};
-        bool blocksMovement{false};
-        bool blocksVision{false};
-        bool onFire{false};
-        float fireDuration{0.f};
+        mutable TerrainType terrain{TerrainType::Open};
+        mutable float traversalCost{1.0f};
+        mutable bool blocksMovement{false};
+        mutable bool blocksVision{false};
+        mutable bool onFire{false};
+        mutable float fireDuration{0.f};
         int elevation{0}; // 0=flat, +1=ramp up, -1=ramp down
         EntityID construct{NULL_Entity}; // paper entity on this tile
 
@@ -92,15 +92,12 @@ namespace nexus::map {
         [[nodiscard]] auto at(int x, int y) const -> const Tile& {
             return tiles_[(y*width_)+x];
         }
-        auto at(const GridPos& p) -> Tile& {
-            return at(p.x, p.y);
-        }
         [[nodiscard]] auto at(const GridPos& p) const -> const Tile& {
             return at(p.x, p.y);
         }
 
         //terrain mutation
-        void setTerrain(const GridPos& p, TerrainType t) {
+        void setTerrain(const GridPos& p, const TerrainType t) {
             if (!inBounds(p)) {
                 return;
             }
@@ -138,7 +135,7 @@ namespace nexus::map {
 
         }
 
-        void ignite(const GridPos& p, const float duration = 5.F) {
+        void ignite(const GridPos& p, const float duration = 5.F) const {
             if (!inBounds(p)) {
                 return;
             }
@@ -198,17 +195,17 @@ namespace nexus::map {
             // cast rays in 360 degrees
             // evaluated at compile time
             constexpr int RAYS = 360;
-            double pi = std::numbers::pi;
+            constexpr float pi = std::numbers::pi_v<__float128>;
             for (int i = 0; i < RAYS; ++i) {
-                const float angle = i * (pi * 2.F / RAYS);
-                float dx = std::cos(angle);
-                float dy = std::sin(angle);
-                float rx = center.x + 0.5F;
-                float ry = center.y + 0.5F;
+                const float angle = static_cast<float>(i) * (pi * 2.F / RAYS);
+                const float dx = std::cos(angle);
+                const float dy = std::sin(angle);
+                float rx = static_cast<float>(center.x) + 0.5F;
+                float ry = static_cast<float>(center.y) + 0.5F;
 
                 for (int step=0; step<=radius; ++step) {
-                    int tx = static_cast<int>(rx);
-                    int ty = static_cast<int>(ry);
+                    const int tx = static_cast<int>(rx);
+                    const int ty = static_cast<int>(ry);
 
                     if (!inBounds(tx,ty)) {
                         break;
@@ -255,7 +252,7 @@ namespace nexus::map {
         struct FromPos { GridPos pos; };
         struct ToPos { GridPos pos; };
 
-         auto cost(const FromPos from, const ToPos to) noexcept -> float {
+         [[nodiscard]] auto cost(const FromPos from, const ToPos to) const noexcept -> float {
             (void) from; // silence compiler warning of unused variable
 
             if (!inBounds(to.pos)) {

@@ -10,7 +10,8 @@ add_executable(Konan main.cpp
         Types.hpp
         simulation/ECS.hpp
         simulation/Components.hpp
-        map/Grid.hpp)
+        map/Grid.hpp
+        map/Pathfinder.hpp)
 
 target_link_libraries(Konan PRIVATE SFML::Network SFML::Graphics SFML::Window SFML::Audio SFML::System)
 
