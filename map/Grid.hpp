@@ -12,7 +12,7 @@ namespace nexus::map {
         mutable bool blocksVision{false};
         mutable bool onFire{false};
         mutable float fireDuration{0.f};
-        int elevation{0}; // 0=flat, +1=ramp up, -1=ramp down
+        mutable int elevation{0}; // 0=flat, +1=ramp up, -1=ramp down
         EntityID construct{NULL_Entity}; // paper entity on this tile
 
         [[nodiscard]] auto isPassable() const noexcept -> bool {
