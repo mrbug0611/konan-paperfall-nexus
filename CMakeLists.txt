@@ -12,7 +12,8 @@ add_executable(Konan main.cpp
         map/Grid.hpp
         map/Pathfinder.hpp
         Types.hpp
-        map/MapGenerator.hpp)
+        map/MapGenerator.hpp
+        engine/EventBus.hpp)
 
 target_link_libraries(Konan PRIVATE SFML::Network SFML::Graphics SFML::Window SFML::Audio SFML::System)
 
