@@ -13,7 +13,8 @@ add_executable(Konan main.cpp
         map/Pathfinder.hpp
         Types.hpp
         map/MapGenerator.hpp
-        engine/EventBus.hpp)
+        engine/EventBus.hpp
+        ai/BehaviorTree.hpp)
 
 target_link_libraries(Konan PRIVATE SFML::Network SFML::Graphics SFML::Window SFML::Audio SFML::System)
 

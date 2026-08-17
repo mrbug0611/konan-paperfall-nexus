@@ -116,7 +116,7 @@ namespace nexus::components {
         EntityID target{NULL_Entity};
         GridPos patrolPoint{0,0};
         std::vector<GridPos> patrolRoute;
-        size_t patronIdx{0};
+        size_t patrolIdx{0};
 
         // Adaptive counters
         int playerCranesSeen{0};

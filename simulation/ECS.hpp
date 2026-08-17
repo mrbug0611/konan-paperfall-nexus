@@ -92,7 +92,7 @@ namespace nexus::ecs {
     struct IPool {
         virtual ~IPool() = default;
         virtual void remove(EntityID e) = 0;
-        [[nodiscard]] virtual auto has() const -> bool = 0;
+        [[nodiscard]] virtual bool has(EntityID e) const = 0; // Must accept EntityID parameter
     };
 
     template<typename T>
@@ -108,139 +108,101 @@ namespace nexus::ecs {
     };
 
     // ─── ECS World ────────────────────────────────────────────────────────────
-    class World {
-        public:
-            // Entity Lifecycle
-            auto createEntity() -> EntityID {
-                EntityID id;
+  class World {
+public:
+    auto createEntity() -> EntityID {
+        EntityID id;
+        if (!free_.empty()) {
+            id = free_.back();
+            free_.pop_back();
+        } else {
+            id = nextID_++;
+            if (id >= signatures_.size()) { signatures_.resize(id + 1); }
+        }
+        signatures_[id].reset();
+        alive_.push_back(id);
+        return id;
+    }
 
-                if (!free_.empty()) {
-                    id = free_.back();
-                    free_.pop_back();
-                }
+    void destroyEntity(const EntityID e) {
+        for (const auto &pool : pools_ | std::views::values) { pool->remove(e); }
+        signatures_[e].reset();
+        std::erase(alive_, e);
+        free_.push_back(e);
+    }
 
-                else {
-                    id = nextID_++;
-                    if (id >= signatures_.size()) {
-                        signatures_.resize(id + 1);
-                    }
-                }
+    auto isAlive(const EntityID e) const noexcept -> bool {
+        return e < signatures_.size() && std::ranges::find(alive_, e) != alive_.end();
+    }
 
-                signatures_[id].reset();
-                alive_.push_back(id);
-                return id;
+    template<typename T>
+    auto addComponent(EntityID e, T comp) -> T& {
+        auto cid = ComponentRegistry::id<T>();
+        auto& pool = getOrCreatePool<T>(cid);
+        pool.set.insert(e, std::move(comp));
+        signatures_[e].set(cid);
+        return pool.set.get(e); // Fixed: changed cid -> e
+    }
 
+    template<typename T>
+    auto getComponent(EntityID e) -> T& { return getPool<T>().set.get(e); }
 
-            }
+    template<typename T>
+    auto hasComponent(EntityID e) const noexcept -> bool {
+        auto cid = ComponentRegistry::id<T>();
+        auto it = pools_.find(cid); // Fixed: safely lookup in std::unordered_map
+        return it != pools_.end() && it->second->has(e);
+    }
 
-            void destroyEntity(const EntityID e) {
-                for (const auto &pool: pools_ | std::views::values) {
-                    pool -> remove(e);
-                }
-                signatures_[e].reset();
-                std::erase(alive_, e);
-                free_.push_back(e);
-            }
+    template<typename T>
+    void removeComponent(EntityID e) {
+        auto cid = ComponentRegistry::id<T>();
+        getPool<T>().set.remove(e);
+        if (e < signatures_.size()) { signatures_[e].reset(cid); }
+    }
 
-            auto isAlive(const EntityID e) const noexcept -> bool {
-                return e < signatures_.size() &&
-                    std::ranges::find(alive_, e) != alive_.end();
-            }
+    template<typename... Ts>
+    auto view() const -> std::vector<EntityID> {
+        std::vector<EntityID> result;
+        if (alive_.empty()) { return result; }
+        for (EntityID e : alive_) { // Fixed: changed alive -> alive_
+            if ((hasComponent<Ts>(e) && ...)) { result.push_back(e); }
+        }
+        return result;
+    }
 
-            // component add / get/ remove/ has
-            template<typename T>
-            auto addComponent(EntityID e, T comp) -> T& {
-                auto cid = ComponentRegistry::id<T>(); // auto means compiler automatically deduce data type
-                auto& pool = getOrCreatePool<T>(cid);
-                pool.set.insert(e, std::move(comp));
-                signatures_[e].set(cid);
-                return pool.set.get(cid);
-            }
+    auto allEntries() const noexcept -> const std::vector<EntityID>& { return alive_; }
+    auto entityCount() const noexcept -> size_t { return alive_.size(); }
 
-            template<typename T>
-            auto getComponent(EntityID e) -> T& {
-                return getPool<T>().set.get(e);
-            }
+private:
+    template<typename T>
+    auto getOrCreatePool(const ComponentT cid) -> Pool<T>& {
+        if (!pools_.contains(cid)) { pools_[cid] = std::make_unique<Pool<T>>(); }
+        return *static_cast<Pool<T>*>(pools_[cid].get());
+    }
 
-            template<typename T>
-            auto hasComponent(EntityID e) const noexcept -> bool {
-                auto cid = ComponentRegistry::id<T>();
-                return cid < pools_.size() && pools_.count(cid) && pools_.at(cid)->has(e);
-            }
+    template<typename T>
+    auto getPool() -> Pool<T>& {
+        auto cid = ComponentRegistry::id<T>();
+        auto it = pools_.find(cid);
+        if (it == pools_.end()) { throw std::runtime_error("No pool found"); }
+        return *static_cast<Pool<T>*>(it->second.get());
+    }
 
-            template<typename T>
-            void removeComponent(EntityID e) {
-                auto cid = ComponentRegistry::id<T>();
-                getPool<T>().set().remove(e);
-                if (e < signatures_.size()) {
-                    signatures_[e].reset(cid);
-                }
-            }
+    template<typename T>
+    auto getPool() const -> const Pool<T>& {
+        auto cid = ComponentRegistry::id<T>();
+        auto it = pools_.find(cid);
+        if (it == pools_.end()) { throw std::runtime_error("Component pool not found"); }
+        return *static_cast<const Pool<T>*>(it->second.get());
+    }
 
-            // view: Iterate over entities with all listed components
-            template<typename... Ts> // accept 0, 1 or many datatypes
-            auto view() const -> std::vector<EntityID> {
-                std::vector<EntityID> result;
-
-                if (alive_.empty()) {
-                    return result;
-                }
-
-                // gather and intersect
-                for (EntityID e : alive_) {
-                    if ((hasComponent<Ts>(e) && ...)) {
-                        result.push_back(e);
-                    }
-                }
-
-                return result;
-            }
-
-            auto allEntries() const noexcept -> const std::vector<EntityID>& {
-                return alive_;
-            }
-
-            auto entityCount() const noexcept -> size_t {
-                return alive_.size();
-            }
-        private:
-
-            template<typename T>
-            auto getOrCreatePool(const ComponentT cid) -> Pool<T> {
-                if (!pools_.contains(cid)) {
-                    pools_[cid] = std::make_unique<Pool<T>>();
-                }
-
-                return *static_cast<Pool<T>*>(pools_[cid].get());
-            }
-
-            template<typename T>
-            auto getPool() -> Pool<T>& {
-                auto cid = ComponentRegistry::id<T>();
-                auto it = pools_.find(cid);
-
-                if (it == pools_.end()) {
-                    throw std::runtime_error("No pool found for id " + std::to_string(cid));
-                }
-
-                return *static_cast<Pool<T>*>(it->second.get());
-            }
-
-            template<typename T>
-            auto getPool() const -> const Pool<T>& {
-                auto cid = ComponentRegistry::id<T>();
-                auto it = pools_.find(cid);
-                if (it == pools_.end()) { throw std::runtime_error("Component pool not found");
-}
-                return *static_cast<const Pool<T>*>(it->second.get());
-            }
-            std::vector<EntityID> free_;
-            EntityID nextID_ = 0;
-            std::vector<std::bitset<MAX_COMPONENTS>> signatures_;
-            std::vector<EntityID> alive_;
-            std::unordered_map<ComponentT, std::unique_ptr<IPool>> pools_;
-    };
-
+    std::vector<EntityID> free_;
+    EntityID nextID_ = 0;
+    std::vector<std::bitset<MAX_COMPONENTS>> signatures_;
+    std::vector<EntityID> alive_;
+    std::unordered_map<ComponentT, std::unique_ptr<IPool>> pools_;
+};
 
 
 };// namespace nexus::ecs
