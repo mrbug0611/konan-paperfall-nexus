@@ -98,12 +98,13 @@ namespace nexus::ecs {
     template<typename T>
     struct Pool : IPool {
         SparseSet<T> set;
+
         void remove(EntityID e) override {
             set.remove(e);
         }
 
-        [[nodiscard]] auto has() const -> bool override {
-            return set.has();
+        [[nodiscard]] auto has(EntityID e) const -> bool override {
+            return set.has(e);
         }
     };
 

@@ -14,7 +14,8 @@ add_executable(Konan main.cpp
         Types.hpp
         map/MapGenerator.hpp
         engine/EventBus.hpp
-        ai/BehaviorTree.hpp)
+        ai/BehaviorTree.hpp
+        simulation/SimWorld.hpp)
 
 target_link_libraries(Konan PRIVATE SFML::Network SFML::Graphics SFML::Window SFML::Audio SFML::System)
 
