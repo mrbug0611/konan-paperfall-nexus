@@ -16,7 +16,8 @@ add_executable(Konan main.cpp
         engine/EventBus.hpp
         ai/BehaviorTree.hpp
         simulation/SimWorld.hpp
-        engine/Renderer.hpp)
+        engine/Renderer.hpp
+        engine/InputHandler.hpp)
 
 target_link_libraries(Konan PRIVATE SFML::Network SFML::Graphics SFML::Window SFML::Audio SFML::System)
 
